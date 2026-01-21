@@ -1,0 +1,25 @@
+# Sports Registration System - Supabase Backend
+
+[project]
+id = "YOUR_PROJECT_ID"
+name = "sports-registration-system"
+
+[db]
+port = 54322
+
+[studio]
+port = 54323
+
+[inbucket]
+port = 54324
+
+[storage]
+enabled = true
+
+[auth]
+site_url = "http://localhost:3000"
+jwt_expiry = 3600
+enable_signup = true
+
+[functions]
+# Edge Functions configuration
