@@ -1,180 +1,120 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Calendar, MapPin, Trophy, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { useState, useEffect, useRef } from "react";
+import { motion, useInView } from "framer-motion";
+import { ArrowRight, Calendar, MapPin } from "lucide-react";
 import Link from "next/link";
 
-interface CountdownUnit {
-    value: number;
-    label: string;
-}
-
 export function CTASection() {
-    const [countdown, setCountdown] = useState<CountdownUnit[]>([
-        { value: 0, label: "Days" },
-        { value: 0, label: "Hours" },
-        { value: 0, label: "Minutes" },
-        { value: 0, label: "Seconds" },
-    ]);
+    const ref = useRef(null);
+    const isInView = useInView(ref, { once: true, margin: "-100px" });
+    const [mounted, setMounted] = useState(false);
+    const [countdown, setCountdown] = useState({ days: 0, hours: 0, mins: 0, secs: 0 });
 
     useEffect(() => {
-        const targetDate = new Date("2026-02-14T09:00:00");
+        setMounted(true);
+        const target = new Date("2026-02-14T09:00:00").getTime();
 
-        const updateCountdown = () => {
-            const now = new Date();
-            const diff = targetDate.getTime() - now.getTime();
-
+        const update = () => {
+            const diff = target - Date.now();
             if (diff > 0) {
-                setCountdown([
-                    { value: Math.floor(diff / (1000 * 60 * 60 * 24)), label: "Days" },
-                    { value: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)), label: "Hours" },
-                    { value: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)), label: "Minutes" },
-                    { value: Math.floor((diff % (1000 * 60)) / 1000), label: "Seconds" },
-                ]);
+                setCountdown({
+                    days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+                    hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+                    mins: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+                    secs: Math.floor((diff % (1000 * 60)) / 1000),
+                });
             }
         };
 
-        updateCountdown();
-        const interval = setInterval(updateCountdown, 1000);
+        update();
+        const interval = setInterval(update, 1000);
         return () => clearInterval(interval);
     }, []);
 
+    const units = [
+        { value: countdown.days, label: "Days" },
+        { value: countdown.hours, label: "Hours" },
+        { value: countdown.mins, label: "Mins" },
+        { value: countdown.secs, label: "Secs" },
+    ];
+
+    if (!mounted) return null;
+
     return (
-        <section className="relative py-32 overflow-hidden">
-            {/* Background */}
-            <div className="absolute inset-0 bg-[var(--background-secondary)]" />
-            <div className="absolute inset-0 grid-bg opacity-50" />
-
-            {/* Animated Border */}
-            <div className="absolute inset-4 lg:inset-8 rounded-3xl border border-[var(--card-border)] overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-[var(--accent-primary)]/20 via-transparent to-[var(--accent-secondary)]/20 animate-gradient" />
-            </div>
-
-            <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section ref={ref} className="section bg-[var(--bg-secondary)]">
+            <div className="container">
                 <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
                     {/* Content */}
                     <motion.div
-                        initial={{ opacity: 0, x: -30 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.6 }}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={isInView ? { opacity: 1, x: 0 } : {}}
+                        transition={{ duration: 0.5 }}
                     >
-                        <Badge variant="primary" className="mb-6">
-                            <Trophy className="w-3 h-3 mr-1" />
-                            Limited Spots Available
-                        </Badge>
+                        <span className="badge badge-accent mb-6">Limited Spots</span>
 
-                        <h2 className="font-display text-5xl sm:text-6xl lg:text-7xl text-[var(--accent-secondary)] mb-6 leading-tight">
-                            DON&apos;T MISS
-                            <br />
-                            <span className="text-gradient">THE ACTION</span>
+                        <h2 className="font-display text-heading text-[var(--text-primary)] mb-4">
+                            Don't Miss<br />
+                            <span className="text-[var(--accent)]">The Action</span>
                         </h2>
 
-                        <p className="text-xl text-[var(--text-secondary)] mb-8 leading-relaxed">
-                            Registrations are filling up fast! Secure your spot now and be part of
-                            the most exciting inter-college sports event of the year.
+                        <p className="text-body text-[var(--text-secondary)] mb-8 max-w-md">
+                            Registrations are filling up fast. Secure your spot in the biggest
+                            inter-college sports event of the year.
                         </p>
 
-                        {/* Event Info */}
-                        <div className="flex flex-wrap gap-6 mb-8">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-[var(--accent-primary-dim)] flex items-center justify-center">
-                                    <Calendar className="w-5 h-5 text-[var(--accent-primary)]" />
-                                </div>
-                                <div>
-                                    <p className="text-xs text-[var(--text-muted)] uppercase">Date</p>
-                                    <p className="text-[var(--accent-secondary)] font-medium">Feb 14-16, 2026</p>
-                                </div>
+                        {/* Event info */}
+                        <div className="flex flex-wrap gap-3 mb-8">
+                            <div className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-card)] rounded-lg border border-[var(--border-subtle)]">
+                                <Calendar size={14} className="text-[var(--accent)]" />
+                                <span className="text-small text-[var(--text-primary)]">Feb 14-16, 2026</span>
                             </div>
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-[var(--accent-primary-dim)] flex items-center justify-center">
-                                    <MapPin className="w-5 h-5 text-[var(--accent-primary)]" />
-                                </div>
-                                <div>
-                                    <p className="text-xs text-[var(--text-muted)] uppercase">Venue</p>
-                                    <p className="text-[var(--accent-secondary)] font-medium">Rishihood University</p>
-                                </div>
+                            <div className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-card)] rounded-lg border border-[var(--border-subtle)]">
+                                <MapPin size={14} className="text-[var(--accent)]" />
+                                <span className="text-small text-[var(--text-primary)]">Rishihood University</span>
                             </div>
                         </div>
 
-                        {/* CTA Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <Link href="/signup">
-                                <Button size="lg" className="group w-full sm:w-auto">
-                                    Register Now
-                                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                                </Button>
-                            </Link>
-                            <Link href="/schedule">
-                                <Button variant="secondary" size="lg" className="w-full sm:w-auto">
-                                    View Schedule
-                                </Button>
-                            </Link>
-                        </div>
+                        {/* CTA */}
+                        <Link href="/signup" className="btn btn-primary px-6 py-3 group">
+                            Register Now
+                            <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
+                        </Link>
                     </motion.div>
 
-                    {/* Countdown Timer */}
+                    {/* Countdown */}
                     <motion.div
-                        initial={{ opacity: 0, x: 30 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.6 }}
-                        className="relative"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={isInView ? { opacity: 1, x: 0 } : {}}
+                        transition={{ duration: 0.5, delay: 0.1 }}
+                        className="card p-8"
                     >
-                        <div className="text-center mb-8">
-                            <p className="text-sm text-[var(--text-muted)] uppercase tracking-widest mb-2">
-                                Event Starts In
-                            </p>
-                            <div className="w-16 h-0.5 bg-gradient-to-r from-transparent via-[var(--accent-primary)] to-transparent mx-auto" />
-                        </div>
+                        <span className="text-caption text-[var(--text-muted)] uppercase tracking-widest block mb-6">
+                            Event Starts In
+                        </span>
 
-                        <div className="grid grid-cols-4 gap-3 sm:gap-4">
-                            {countdown.map((item, index) => (
-                                <motion.div
-                                    key={item.label}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true }}
-                                    transition={{ delay: 0.3 + index * 0.1 }}
-                                    className="relative group"
-                                >
-                                    <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl p-3 sm:p-4 text-center group-hover:border-[var(--accent-primary)] transition-colors">
-                                        <motion.div
-                                            key={item.value}
-                                            initial={{ y: -10, opacity: 0 }}
-                                            animate={{ y: 0, opacity: 1 }}
-                                            className="font-mono text-3xl sm:text-4xl lg:text-5xl font-bold text-[var(--accent-secondary)]"
-                                        >
-                                            {String(item.value).padStart(2, "0")}
-                                        </motion.div>
-                                        <div className="text-[10px] sm:text-xs text-[var(--text-muted)] uppercase tracking-wider mt-1">
-                                            {item.label}
-                                        </div>
+                        <div className="grid grid-cols-4 gap-3">
+                            {units.map((unit) => (
+                                <div key={unit.label} className="text-center">
+                                    <div className="bg-[var(--bg-primary)] rounded-lg py-4 mb-2">
+                                        <span className="font-display text-3xl sm:text-4xl text-[var(--text-primary)]">
+                                            {String(unit.value).padStart(2, "0")}
+                                        </span>
                                     </div>
-                                    {/* Glow effect */}
-                                    <div className="absolute inset-0 bg-[var(--accent-primary)] rounded-xl blur-xl opacity-0 group-hover:opacity-10 transition-opacity -z-10" />
-                                </motion.div>
+                                    <span className="text-caption text-[var(--text-muted)] uppercase">
+                                        {unit.label}
+                                    </span>
+                                </div>
                             ))}
                         </div>
 
-                        {/* Decorative Trophy */}
-                        <motion.div
-                            className="absolute -top-8 -right-8 text-6xl opacity-20"
-                            animate={{ rotate: [0, 10, -10, 0] }}
-                            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                        >
-                            🏆
-                        </motion.div>
+                        <div className="mt-6 pt-6 border-t border-[var(--border-subtle)] flex justify-between text-small">
+                            <span className="text-[var(--text-muted)]">Early bird ends</span>
+                            <span className="text-[var(--accent)]">Feb 1, 2026</span>
+                        </div>
                     </motion.div>
                 </div>
             </div>
-
-            {/* Corner Accents */}
-            <div className="absolute top-8 left-8 w-24 h-24 border-l-2 border-t-2 border-[var(--accent-primary)]/30 rounded-tl-3xl" />
-            <div className="absolute bottom-8 right-8 w-24 h-24 border-r-2 border-b-2 border-[var(--accent-primary)]/30 rounded-br-3xl" />
         </section>
     );
 }

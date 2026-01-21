@@ -1,39 +1,26 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import {
-    ArrowLeft, Calendar, MapPin, Users, User, Clock, Trophy,
-    CheckCircle, AlertCircle, ArrowRight, Share2, Heart
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, Users, User, Calendar, MapPin, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { formatCurrency } from "@/lib/utils";
 
-// Mock sport data
 const sportData: Record<string, any> = {
     football: {
-        id: 1, name: "Football", slug: "football", category: "Outdoor",
-        description: "Experience the thrill of competitive 5-a-side football! Our tournament features knockout rounds with intense matches that will test your team's skills, strategy, and stamina.",
-        rules: [
-            "Each team must have 5 players on the field",
-            "Match duration: 2 halves of 15 minutes each",
-            "Rolling substitutions allowed",
-            "No slide tackles permitted",
-            "Goalkeeper can play the ball across the halfway line",
-        ],
-        icon: "⚽", type: "TEAM", teamMin: 5, teamMax: 8,
-        gradient: "from-emerald-500 to-emerald-700",
-        accentColor: "#22c55e",
-        fee: 2000, earlyBirdFee: 1500, earlyBirdDeadline: "2026-02-01",
+        name: "Football", type: "TEAM", teamSize: "5-8 players",
+        description: "5-a-side knockout tournament with intense matches testing your team's skills.",
+        fee: 2000, earlyBirdFee: 1500,
         date: "Feb 14, 2026", time: "9:00 AM - 6:00 PM",
         venue: "Main Ground, Rishihood University",
-        filledSlots: 42, maxSlots: 48,
-        registrationDeadline: "2026-02-10",
-        isOpen: true, waitlistEnabled: true, maxWaitlist: 5, currentWaitlist: 2,
+        slots: { filled: 42, max: 48 },
+        rules: [
+            "5 players per team on field",
+            "2 halves of 15 minutes each",
+            "Rolling substitutions allowed",
+            "No slide tackles",
+        ],
     },
 };
 
@@ -41,237 +28,144 @@ export default function SportDetailsPage() {
     const params = useParams();
     const slug = params.slug as string;
     const sport = sportData[slug] || sportData.football;
-
-    const [isLiked, setIsLiked] = useState(false);
-
-    const percentage = Math.round((sport.filledSlots / sport.maxSlots) * 100);
-    const spotsLeft = sport.maxSlots - sport.filledSlots;
-    const isEarlyBird = new Date() < new Date(sport.earlyBirdDeadline);
-    const currentFee = isEarlyBird ? sport.earlyBirdFee : sport.fee;
+    const pct = (sport.slots.filled / sport.slots.max) * 100;
+    const spotsLeft = sport.slots.max - sport.slots.filled;
 
     return (
-        <div className="min-h-screen pt-24 pb-16">
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Back Button */}
+        <div className="min-h-screen pt-20 pb-16">
+            <div className="container max-w-4xl">
+                {/* Back */}
                 <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="mb-8"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="pt-8 mb-6"
                 >
-                    <Link href="/sports" className="inline-flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--accent-secondary)] transition-colors">
-                        <ArrowLeft className="w-4 h-4" />
-                        Back to Sports
+                    <Link href="/sports" className="inline-flex items-center gap-2 text-small text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
+                        <ArrowLeft size={14} /> Back to Sports
                     </Link>
                 </motion.div>
 
-                <div className="grid lg:grid-cols-3 gap-8">
-                    {/* Main Content */}
+                <div className="grid lg:grid-cols-3 gap-6">
+                    {/* Main */}
                     <div className="lg:col-span-2 space-y-6">
-                        {/* Header Card */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
+                            className="card p-6"
                         >
-                            <Card hover={false} className="overflow-hidden">
-                                {/* Gradient Banner */}
-                                <div className={`h-32 bg-gradient-to-r ${sport.gradient} relative`}>
-                                    <div className="absolute inset-0 bg-black/20" />
-                                    <div className="absolute bottom-4 left-6 flex items-center gap-4">
-                                        <div className="w-20 h-20 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-4xl border border-white/30">
-                                            {sport.icon}
-                                        </div>
-                                        <div>
-                                            <Badge variant={sport.type === "TEAM" ? "team" : "individual"} className="mb-2">
-                                                {sport.type === "TEAM" ? <Users className="w-3 h-3 mr-1" /> : <User className="w-3 h-3 mr-1" />}
-                                                {sport.type} EVENT
-                                            </Badge>
-                                            <h1 className="font-display text-4xl text-white">{sport.name}</h1>
-                                        </div>
-                                    </div>
-                                    {/* Action Buttons */}
-                                    <div className="absolute top-4 right-4 flex gap-2">
-                                        <motion.button
-                                            whileTap={{ scale: 0.9 }}
-                                            onClick={() => setIsLiked(!isLiked)}
-                                            className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-colors"
-                                        >
-                                            <Heart className={`w-5 h-5 ${isLiked ? "fill-red-500 text-red-500" : ""}`} />
-                                        </motion.button>
-                                        <motion.button
-                                            whileTap={{ scale: 0.9 }}
-                                            className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-colors"
-                                        >
-                                            <Share2 className="w-5 h-5" />
-                                        </motion.button>
-                                    </div>
+                            <div className="flex items-start justify-between mb-4">
+                                <div>
+                                    <h1 className="font-display text-heading text-[var(--text-primary)] mb-1">
+                                        {sport.name}
+                                    </h1>
+                                    <Badge>
+                                        {sport.type === "TEAM" ? <Users size={10} /> : <User size={10} />}
+                                        {sport.type}
+                                    </Badge>
                                 </div>
-
-                                <div className="p-6">
-                                    <p className="text-[var(--text-secondary)] leading-relaxed">
-                                        {sport.description}
-                                    </p>
-                                </div>
-                            </Card>
+                            </div>
+                            <p className="text-body text-[var(--text-secondary)]">
+                                {sport.description}
+                            </p>
                         </motion.div>
 
-                        {/* Details */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 }}
+                            className="card p-6"
                         >
-                            <Card hover={false} className="p-6">
-                                <h2 className="font-display text-xl text-[var(--accent-secondary)] mb-4">EVENT DETAILS</h2>
-                                <div className="grid sm:grid-cols-2 gap-4">
-                                    <div className="flex items-center gap-3 p-4 bg-[var(--card-bg-hover)] rounded-xl">
-                                        <Calendar className="w-5 h-5 text-[var(--accent-primary)]" />
-                                        <div>
-                                            <p className="text-xs text-[var(--text-muted)]">Date</p>
-                                            <p className="text-[var(--accent-secondary)] font-medium">{sport.date}</p>
-                                        </div>
+                            <h2 className="font-display text-base text-[var(--text-primary)] mb-4">Details</h2>
+                            <div className="grid sm:grid-cols-2 gap-4">
+                                <div className="flex items-center gap-3 p-3 bg-[var(--bg-secondary)] rounded-lg">
+                                    <Calendar size={16} className="text-[var(--accent)]" />
+                                    <div>
+                                        <p className="text-caption text-[var(--text-muted)]">Date</p>
+                                        <p className="text-small text-[var(--text-primary)]">{sport.date}</p>
                                     </div>
-                                    <div className="flex items-center gap-3 p-4 bg-[var(--card-bg-hover)] rounded-xl">
-                                        <Clock className="w-5 h-5 text-[var(--accent-primary)]" />
-                                        <div>
-                                            <p className="text-xs text-[var(--text-muted)]">Time</p>
-                                            <p className="text-[var(--accent-secondary)] font-medium">{sport.time}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3 p-4 bg-[var(--card-bg-hover)] rounded-xl sm:col-span-2">
-                                        <MapPin className="w-5 h-5 text-[var(--accent-primary)]" />
-                                        <div>
-                                            <p className="text-xs text-[var(--text-muted)]">Venue</p>
-                                            <p className="text-[var(--accent-secondary)] font-medium">{sport.venue}</p>
-                                        </div>
-                                    </div>
-                                    {sport.type === "TEAM" && (
-                                        <div className="flex items-center gap-3 p-4 bg-[var(--card-bg-hover)] rounded-xl sm:col-span-2">
-                                            <Users className="w-5 h-5 text-[var(--accent-primary)]" />
-                                            <div>
-                                                <p className="text-xs text-[var(--text-muted)]">Team Size</p>
-                                                <p className="text-[var(--accent-secondary)] font-medium">{sport.teamMin} - {sport.teamMax} players</p>
-                                            </div>
-                                        </div>
-                                    )}
                                 </div>
-                            </Card>
+                                <div className="flex items-center gap-3 p-3 bg-[var(--bg-secondary)] rounded-lg">
+                                    <MapPin size={16} className="text-[var(--accent)]" />
+                                    <div>
+                                        <p className="text-caption text-[var(--text-muted)]">Venue</p>
+                                        <p className="text-small text-[var(--text-primary)]">{sport.venue}</p>
+                                    </div>
+                                </div>
+                            </div>
                         </motion.div>
 
-                        {/* Rules */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 }}
+                            className="card p-6"
                         >
-                            <Card hover={false} className="p-6">
-                                <h2 className="font-display text-xl text-[var(--accent-secondary)] mb-4">RULES & REGULATIONS</h2>
-                                <ul className="space-y-3">
-                                    {sport.rules.map((rule: string, index: number) => (
-                                        <li key={index} className="flex items-start gap-3">
-                                            <CheckCircle className="w-5 h-5 text-[var(--success)] flex-shrink-0 mt-0.5" />
-                                            <span className="text-[var(--text-secondary)]">{rule}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </Card>
+                            <h2 className="font-display text-base text-[var(--text-primary)] mb-4">Rules</h2>
+                            <ul className="space-y-2">
+                                {sport.rules.map((rule: string, i: number) => (
+                                    <li key={i} className="flex items-start gap-2 text-small text-[var(--text-secondary)]">
+                                        <CheckCircle size={14} className="text-[var(--success)] mt-0.5 flex-shrink-0" />
+                                        {rule}
+                                    </li>
+                                ))}
+                            </ul>
                         </motion.div>
                     </div>
 
                     {/* Sidebar */}
-                    <div className="space-y-6">
-                        {/* Registration Card */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
-                        >
-                            <Card hover={false} className="p-6 sticky top-28">
-                                {/* Pricing */}
-                                <div className="mb-6">
-                                    <div className="flex items-baseline gap-2 mb-1">
-                                        <span className="font-mono text-4xl font-bold text-[var(--accent-secondary)]">
-                                            {formatCurrency(currentFee)}
-                                        </span>
-                                        {isEarlyBird && (
-                                            <span className="text-[var(--text-muted)] line-through text-lg">
-                                                {formatCurrency(sport.fee)}
-                                            </span>
-                                        )}
-                                    </div>
-                                    {isEarlyBird && (
-                                        <Badge variant="success" className="mt-2">
-                                            Early Bird - Save {formatCurrency(sport.fee - sport.earlyBirdFee)}!
-                                        </Badge>
-                                    )}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                    >
+                        <div className="card p-6 sticky top-24">
+                            <div className="mb-6">
+                                <div className="flex items-baseline gap-2 mb-1">
+                                    <span className="font-display text-3xl text-[var(--text-primary)]">
+                                        ₹{sport.earlyBirdFee.toLocaleString()}
+                                    </span>
+                                    <span className="text-small text-[var(--text-muted)] line-through">
+                                        ₹{sport.fee.toLocaleString()}
+                                    </span>
                                 </div>
+                                <Badge variant="accent">Early Bird</Badge>
+                            </div>
 
-                                {/* Capacity */}
-                                <div className="mb-6">
-                                    <div className="flex justify-between text-sm mb-2">
-                                        <span className="text-[var(--text-muted)]">Registration Progress</span>
-                                        <span className="font-mono" style={{ color: sport.accentColor }}>
-                                            {sport.filledSlots}/{sport.maxSlots}
-                                        </span>
-                                    </div>
-                                    <div className="h-2 bg-[var(--card-border)] rounded-full overflow-hidden mb-2">
-                                        <motion.div
-                                            className={`h-full bg-gradient-to-r ${sport.gradient}`}
-                                            initial={{ width: 0 }}
-                                            animate={{ width: `${percentage}%` }}
-                                            transition={{ duration: 1 }}
-                                        />
-                                    </div>
-                                    {spotsLeft <= 10 && spotsLeft > 0 && (
-                                        <p className="text-xs text-amber-400 flex items-center gap-1">
-                                            <AlertCircle className="w-3 h-3" />
-                                            Only {spotsLeft} spots left!
-                                        </p>
-                                    )}
+                            <div className="mb-6">
+                                <div className="flex justify-between text-caption mb-2">
+                                    <span className="text-[var(--text-muted)]">Registrations</span>
+                                    <span className="text-[var(--text-secondary)]">
+                                        {sport.slots.filled}/{sport.slots.max}
+                                    </span>
                                 </div>
-
-                                {/* Deadline */}
-                                <div className="p-4 bg-[var(--card-bg-hover)] rounded-xl mb-6">
-                                    <div className="flex items-center gap-2 text-[var(--text-muted)] text-sm">
-                                        <Clock className="w-4 h-4" />
-                                        Registration closes on
-                                    </div>
-                                    <p className="font-mono text-[var(--accent-secondary)] mt-1">
-                                        February 10, 2026
-                                    </p>
+                                <div className="h-1.5 bg-[var(--border-subtle)] rounded-full overflow-hidden">
+                                    <div className="h-full bg-[var(--accent)] rounded-full" style={{ width: `${pct}%` }} />
                                 </div>
-
-                                {/* CTA */}
-                                <Link href={`/register/${sport.slug}`}>
-                                    <Button className="w-full" size="lg">
-                                        Register Now
-                                        <ArrowRight className="w-4 h-4 ml-2" />
-                                    </Button>
-                                </Link>
-
-                                {sport.waitlistEnabled && spotsLeft === 0 && (
-                                    <p className="text-center text-sm text-[var(--text-muted)] mt-4">
-                                        Waitlist available ({sport.currentWaitlist}/{sport.maxWaitlist} in queue)
+                                {spotsLeft <= 10 && (
+                                    <p className="text-caption text-[var(--warning)] mt-2">
+                                        Only {spotsLeft} spots left
                                     </p>
                                 )}
+                            </div>
 
-                                {/* Info */}
-                                <div className="mt-6 pt-6 border-t border-[var(--card-border)] space-y-3 text-sm">
-                                    <div className="flex items-center gap-2 text-[var(--text-muted)]">
-                                        <CheckCircle className="w-4 h-4 text-[var(--success)]" />
-                                        Instant confirmation
-                                    </div>
-                                    <div className="flex items-center gap-2 text-[var(--text-muted)]">
-                                        <CheckCircle className="w-4 h-4 text-[var(--success)]" />
-                                        Secure payment via Razorpay
-                                    </div>
-                                    <div className="flex items-center gap-2 text-[var(--text-muted)]">
-                                        <CheckCircle className="w-4 h-4 text-[var(--success)]" />
-                                        Free cancellation before Feb 8
-                                    </div>
+                            <Link href={`/register/${slug}`}>
+                                <Button className="w-full mb-4">
+                                    Register Now <ArrowRight size={16} />
+                                </Button>
+                            </Link>
+
+                            <div className="space-y-2 text-caption text-[var(--text-muted)]">
+                                <div className="flex items-center gap-2">
+                                    <CheckCircle size={12} className="text-[var(--success)]" />
+                                    Instant confirmation
                                 </div>
-                            </Card>
-                        </motion.div>
-                    </div>
+                                <div className="flex items-center gap-2">
+                                    <CheckCircle size={12} className="text-[var(--success)]" />
+                                    Secure payment
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
                 </div>
             </div>
         </div>

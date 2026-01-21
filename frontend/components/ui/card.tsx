@@ -1,59 +1,53 @@
 "use client";
 
-import { forwardRef } from "react";
-import { motion, HTMLMotionProps } from "framer-motion";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-interface CardProps extends HTMLMotionProps<"div"> {
+interface CardProps {
+    children: React.ReactNode;
+    className?: string;
     hover?: boolean;
-    glow?: boolean;
 }
 
-export const Card = forwardRef<HTMLDivElement, CardProps>(
-    ({ className, hover = true, glow = false, children, ...props }, ref) => {
-        return (
-            <motion.div
-                ref={ref}
-                whileHover={hover ? { y: -8, scale: 1.01 } : undefined}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                className={cn(
-                    "relative bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl overflow-hidden",
-                    "transition-all duration-300",
-                    hover && "hover:shadow-[0_25px_50px_rgba(0,0,0,0.4)] hover:border-[var(--accent-primary-dim)]",
-                    glow && "hover:border-[var(--accent-primary)] hover:shadow-[0_0_40px_rgba(178,14,56,0.15)]",
-                    className
-                )}
-                {...props}
-            >
-                {children}
-                {/* Gradient overlay on hover */}
-                <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent-primary)]/0 to-transparent opacity-0 hover:opacity-5 pointer-events-none transition-opacity" />
-            </motion.div>
-        );
-    }
-);
+export function Card({ children, className, hover = false }: CardProps) {
+    const Comp = hover ? motion.div : "div";
 
-Card.displayName = "Card";
-
-export function CardHeader({ className, children }: { className?: string; children: React.ReactNode }) {
     return (
-        <div className={cn("p-6 lg:p-8", className)}>
+        <Comp
+            {...(hover && {
+                whileHover: { y: -2 },
+                transition: { duration: 0.2 }
+            })}
+            className={cn(
+                "bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl transition-colors",
+                hover && "hover:border-[var(--border-default)]",
+                className
+            )}
+        >
+            {children}
+        </Comp>
+    );
+}
+
+export function CardHeader({ children, className }: { children: React.ReactNode; className?: string }) {
+    return (
+        <div className={cn("p-5 pb-0", className)}>
             {children}
         </div>
     );
 }
 
-export function CardContent({ className, children }: { className?: string; children: React.ReactNode }) {
+export function CardContent({ children, className }: { children: React.ReactNode; className?: string }) {
     return (
-        <div className={cn("p-6 lg:p-8 pt-0", className)}>
+        <div className={cn("p-5", className)}>
             {children}
         </div>
     );
 }
 
-export function CardFooter({ className, children }: { className?: string; children: React.ReactNode }) {
+export function CardFooter({ children, className }: { children: React.ReactNode; className?: string }) {
     return (
-        <div className={cn("p-6 lg:p-8 pt-4 border-t border-[var(--card-border)]", className)}>
+        <div className={cn("p-5 pt-0 border-t border-[var(--border-subtle)]", className)}>
             {children}
         </div>
     );

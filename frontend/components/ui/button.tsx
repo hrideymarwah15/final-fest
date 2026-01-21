@@ -1,61 +1,55 @@
 "use client";
 
-import { forwardRef, ButtonHTMLAttributes } from "react";
-import { motion, HTMLMotionProps } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
 
-type ButtonVariant = "primary" | "secondary" | "tertiary" | "ghost" | "danger";
-type ButtonSize = "sm" | "md" | "lg";
-
-interface ButtonProps extends Omit<HTMLMotionProps<"button">, "size"> {
-    variant?: ButtonVariant;
-    size?: ButtonSize;
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+    variant?: "primary" | "secondary" | "ghost";
+    size?: "sm" | "md" | "lg";
     isLoading?: boolean;
-    icon?: React.ReactNode;
+    children: React.ReactNode;
 }
 
-const variants: Record<ButtonVariant, string> = {
-    primary: "bg-[var(--accent-primary)] text-[var(--accent-secondary)] hover:bg-[var(--accent-primary-hover)] hover:shadow-lg hover:shadow-[var(--accent-primary-glow)]",
-    secondary: "bg-transparent text-[var(--accent-secondary)] border-2 border-[var(--accent-secondary)] hover:bg-[var(--accent-secondary)] hover:text-[var(--background)]",
-    tertiary: "bg-[var(--accent-tertiary)] text-white hover:bg-[var(--accent-tertiary-hover)]",
-    ghost: "bg-transparent text-[var(--text-secondary)] hover:text-[var(--accent-secondary)] hover:bg-[var(--accent-primary-dim)]",
-    danger: "bg-red-600 text-white hover:bg-red-700",
-};
+export function Button({
+    variant = "primary",
+    size = "md",
+    isLoading = false,
+    className,
+    children,
+    disabled,
+    ...props
+}: ButtonProps) {
+    const variants: Record<string, string> = {
+        primary: "bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]",
+        secondary: "bg-transparent text-[var(--text-primary)] border border-[var(--border-default)] hover:bg-white/5 hover:border-[var(--border-strong)]",
+        ghost: "bg-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5",
+    };
 
-const sizes: Record<ButtonSize, string> = {
-    sm: "px-4 py-2 text-xs",
-    md: "px-6 py-3 text-sm",
-    lg: "px-8 py-4 text-sm",
-};
+    const sizes: Record<string, string> = {
+        sm: "px-3 py-1.5 text-xs",
+        md: "px-4 py-2 text-sm",
+        lg: "px-6 py-3 text-sm",
+    };
 
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-    ({ className, variant = "primary", size = "md", isLoading, icon, children, disabled, ...props }, ref) => {
-        return (
-            <motion.button
-                ref={ref}
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                disabled={disabled || isLoading}
-                className={cn(
-                    "relative inline-flex items-center justify-center gap-2 font-semibold uppercase tracking-widest rounded-lg transition-all duration-300 btn-shimmer",
-                    "disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none",
-                    variants[variant],
-                    sizes[size],
-                    className
-                )}
-                {...props}
-            >
-                {isLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                ) : icon ? (
-                    <span className="w-4 h-4">{icon}</span>
-                ) : null}
-                {children}
-            </motion.button>
-        );
-    }
-);
-
-Button.displayName = "Button";
+    return (
+        <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ duration: 0.15 }}
+            className={cn(
+                "inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-colors disabled:opacity-50 disabled:pointer-events-none",
+                variants[variant],
+                sizes[size],
+                className
+            )}
+            disabled={disabled || isLoading}
+            {...props}
+        >
+            {isLoading ? (
+                <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+            ) : (
+                children
+            )}
+        </motion.button>
+    );
+}
