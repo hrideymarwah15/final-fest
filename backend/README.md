@@ -234,3 +234,5 @@ Events to subscribe:
 ## License
 
 MIT
+
+> Last Updated: January 2026
