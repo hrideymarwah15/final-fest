@@ -8,6 +8,7 @@ const photos = [
     "/photos/DSC00406.JPG",
     "/photos/DSC00543.JPG",
     "/photos/DSC00556.JPG",
+    "/photos/DSC00569.JPG",
 ];
 
 export function GallerySection() {
@@ -18,7 +19,7 @@ export function GallerySection() {
     });
 
     return (
-        <section ref={containerRef} className="relative h-[300vh] bg-[var(--bg-primary)]">
+        <section ref={containerRef} className="relative h-[400vh] bg-[var(--bg-primary)]">
             <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
                 {/* Title Overlay */}
                 <div className="absolute z-50 text-center pointer-events-none mix-blend-difference text-white">
@@ -30,10 +31,10 @@ export function GallerySection() {
                 </div>
 
                 {photos.map((photo, index) => {
-                    // Calculate range for each photo relative to scroll progress
-                    // 0 to 1 split into 4 segments
-                    const start = index * 0.25;
-                    const end = start + 0.25;
+                    // Start and end points for each photo
+                    const step = 1 / photos.length;
+                    const start = index * step;
+                    const end = start + step;
 
                     // First image is always visible at start
                     const clipPath = useTransform(
