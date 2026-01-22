@@ -2,12 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Mail, Lock, User, Phone, Eye, EyeOff, ArrowRight, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { createClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
+    const router = useRouter();
+    const supabase = createClient();
     const [step, setStep] = useState(1);
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -37,8 +41,31 @@ export default function SignupPage() {
         }
 
         setIsLoading(true);
-        await new Promise((r) => setTimeout(r, 1500));
-        setIsLoading(false);
+
+        try {
+            const { error: signUpError } = await supabase.auth.signUp({
+                email: form.email,
+                password: form.password,
+                options: {
+                    data: {
+                        full_name: form.name,
+                        phone: form.phone,
+                    },
+                },
+            });
+
+            if (signUpError) {
+                throw signUpError;
+            }
+
+            // Successful signup
+            router.push("/dashboard");
+
+        } catch (err: any) {
+            setError(err.message || "Something went wrong during sign up");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -138,9 +165,16 @@ export default function SignupPage() {
                                 icon={<Lock size={16} />}
                                 value={form.confirmPassword}
                                 onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-                                error={error && error.includes("match") ? error : undefined}
+                                error={error && error.includes("match") ? error : undefined} // Simple check
                                 required
                             />
+
+                            {error && !error.includes("Password must") && !error.includes("match") && (
+                                <div className="text-xs text-[var(--error)] bg-red-500/10 p-2 rounded">
+                                    {error}
+                                </div>
+                            )}
+
                             <div className="flex gap-3">
                                 <Button type="button" variant="ghost" onClick={() => setStep(1)} className="flex-1">
                                     <ArrowLeft size={16} /> Back
