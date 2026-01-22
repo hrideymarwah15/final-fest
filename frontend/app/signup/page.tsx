@@ -11,16 +11,31 @@ export default function SignupPage() {
     const [step, setStep] = useState(1);
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState("");
     const [form, setForm] = useState({
         name: "", email: "", phone: "", password: "", confirmPassword: ""
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError("");
+
         if (step === 1) {
             setStep(2);
             return;
         }
+
+        // Step 2 validation
+        if (form.password !== form.confirmPassword) {
+            setError("Passwords do not match");
+            return;
+        }
+
+        if (form.password.length < 8) {
+            setError("Password must be at least 8 characters");
+            return;
+        }
+
         setIsLoading(true);
         await new Promise((r) => setTimeout(r, 1500));
         setIsLoading(false);
@@ -105,6 +120,7 @@ export default function SignupPage() {
                                     icon={<Lock size={16} />}
                                     value={form.password}
                                     onChange={(e) => setForm({ ...form, password: e.target.value })}
+                                    error={error && error.includes("Password must") ? error : undefined}
                                     required
                                 />
                                 <button
@@ -122,6 +138,7 @@ export default function SignupPage() {
                                 icon={<Lock size={16} />}
                                 value={form.confirmPassword}
                                 onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                                error={error && error.includes("match") ? error : undefined}
                                 required
                             />
                             <div className="flex gap-3">

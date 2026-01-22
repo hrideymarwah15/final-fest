@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, Users, User, Calendar, MapPin, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +27,11 @@ const sportData: Record<string, any> = {
 export default function SportDetailsPage() {
     const params = useParams();
     const slug = params.slug as string;
-    const sport = sportData[slug] || sportData.football;
+    const sport = sportData[slug];
+
+    if (!sport) {
+        notFound();
+    }
     const pct = (sport.slots.filled / sport.slots.max) * 100;
     const spotsLeft = sport.slots.max - sport.slots.filled;
 

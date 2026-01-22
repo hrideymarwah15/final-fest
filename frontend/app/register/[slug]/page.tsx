@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -14,13 +14,27 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
 
-// Mock sport data
-const sport = {
-    id: 1, name: "Football", slug: "football",
-    icon: "⚽", type: "TEAM", teamMin: 5, teamMax: 8,
-    gradient: "from-emerald-500 to-emerald-700",
-    fee: 2000, earlyBirdFee: 1500,
-    isEarlyBird: true,
+// Mock sports database
+const sportsData: Record<string, any> = {
+    football: {
+        id: 1, name: "Football", slug: "football",
+        icon: "⚽", type: "TEAM", teamMin: 5, teamMax: 8,
+        gradient: "from-emerald-500 to-emerald-700",
+        fee: 2000, earlyBirdFee: 1500, isEarlyBird: true,
+    },
+    badminton: {
+        id: 3, name: "Badminton", slug: "badminton",
+        icon: "🏸", type: "INDIVIDUAL", teamMin: 1, teamMax: 1,
+        gradient: "from-blue-500 to-blue-700",
+        fee: 500, earlyBirdFee: 400, isEarlyBird: false,
+    },
+    // Default fallback
+    default: {
+        id: 0, name: "Sports Event", slug: "default",
+        icon: "🏆", type: "TEAM", teamMin: 1, teamMax: 10,
+        gradient: "from-red-500 to-red-700",
+        fee: 1000, earlyBirdFee: 800, isEarlyBird: false,
+    }
 };
 
 interface TeamMember {
@@ -33,6 +47,11 @@ interface TeamMember {
 
 export default function RegisterPage() {
     const params = useParams();
+    const slug = params?.slug as string;
+
+    // 1. Dynamic Sport Selection
+    const sport = sportsData[slug] || sportsData.default;
+
     const [step, setStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
     const [teamName, setTeamName] = useState("");
@@ -54,9 +73,20 @@ export default function RegisterPage() {
         }
     };
 
+    // 2. Captain Removal Logic
     const removeMember = (id: string) => {
         if (members.length > sport.teamMin) {
-            setMembers(members.filter(m => m.id !== id));
+            const memberToRemove = members.find(m => m.id === id);
+            if (!memberToRemove) return;
+
+            const remainingMembers = members.filter(m => m.id !== id);
+
+            // Reassign captain if needed
+            if (memberToRemove.isCaptain && remainingMembers.length > 0) {
+                remainingMembers[0].isCaptain = true;
+            }
+
+            setMembers(remainingMembers);
         }
     };
 
@@ -64,8 +94,19 @@ export default function RegisterPage() {
         setMembers(members.map(m => m.id === id ? { ...m, [field]: value } : m));
     };
 
+    // 3. Validation Logic
+    const isFormValid = useMemo(() => {
+        const hasValidTeamSize = members.length >= sport.teamMin;
+        const hasValidTeamName = sport.type === "TEAM" ? !!teamName.trim() : true;
+        const allMembersHaveNames = members.every(m => m.name?.trim().length > 0);
+        return hasValidTeamSize && hasValidTeamName && allMembersHaveNames && acceptTerms;
+    }, [members, teamName, acceptTerms, sport.type, sport.teamMin]);
+
     const handleSubmit = async () => {
+        if (!isFormValid) return;
+
         setIsLoading(true);
+        // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 1500));
         setIsLoading(false);
         setStep(3);
@@ -80,21 +121,21 @@ export default function RegisterPage() {
     return (
         <div className="min-h-screen pt-24 pb-16">
             <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Back */}
+                {/* Back Link */}
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6">
                     <Link href={`/sports/${sport.slug}`} className="inline-flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--accent-secondary)]">
                         <ArrowLeft className="w-4 h-4" /> Back to {sport.name}
                     </Link>
                 </motion.div>
 
-                {/* Progress */}
+                {/* Progress Indicators */}
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
                     <div className="flex items-center justify-between">
                         {steps.map((s, i) => (
                             <div key={s.num} className="flex items-center">
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-colors ${step >= s.num
-                                        ? "bg-[var(--accent-primary)] text-white"
-                                        : "bg-[var(--card-bg)] text-[var(--text-muted)] border border-[var(--card-border)]"
+                                    ? "bg-[var(--accent-primary)] text-white"
+                                    : "bg-[var(--card-bg)] text-[var(--text-muted)] border border-[var(--card-border)]"
                                     }`}>
                                     {step > s.num ? <Check className="w-5 h-5" /> : s.num}
                                 </div>
@@ -121,7 +162,7 @@ export default function RegisterPage() {
                                     </div>
                                     <div>
                                         <h3 className="font-display text-xl text-[var(--accent-secondary)]">{sport.name}</h3>
-                                        <Badge variant={sport.type === "TEAM" ? "team" : "individual"}>
+                                        <Badge variant={sport.type === "TEAM" ? "accent" : "default"}>
                                             {sport.type === "TEAM" ? <Users className="w-3 h-3 mr-1" /> : <User className="w-3 h-3 mr-1" />}
                                             {sport.type} EVENT
                                         </Badge>
@@ -160,10 +201,11 @@ export default function RegisterPage() {
                         <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                             <Card hover={false} className="p-6 mb-6">
                                 <h2 className="font-display text-2xl text-[var(--accent-secondary)] mb-6">
-                                    {sport.type === "TEAM" ? "TEAM DETAILS" : "YOUR DETAILS"}
+                                    {sport.type === "TEAM" ? "TEAM DETAILS" : "PARTICIPANT DETAILS"}
                                 </h2>
 
-                                {sport.type === "TEAM" && (
+                                {/* 4. Team vs Individual Logic */}
+                                {sport.type === "TEAM" ? (
                                     <>
                                         <Input
                                             label="Team Name"
@@ -195,7 +237,7 @@ export default function RegisterPage() {
                                                     <div className="flex items-center justify-between">
                                                         <div className="flex items-center gap-2">
                                                             <span className="text-sm text-[var(--text-muted)]">Player {index + 1}</span>
-                                                            {member.isCaptain && <Badge variant="primary">Captain</Badge>}
+                                                            {member.isCaptain && <Badge variant="accent">Captain</Badge>}
                                                         </div>
                                                         {members.length > sport.teamMin && (
                                                             <button
@@ -236,9 +278,36 @@ export default function RegisterPage() {
                                             </Button>
                                         )}
                                     </>
+                                ) : (
+                                    // Individual Form
+                                    <div className="space-y-4 mb-6">
+                                        <Input
+                                            label="Full Name"
+                                            placeholder="Enter your full name"
+                                            value={members[0].name}
+                                            onChange={(e) => updateMember(members[0].id, "name", e.target.value)}
+                                            required
+                                        />
+                                        <Input
+                                            label="Email Address"
+                                            placeholder="Enter your email"
+                                            type="email"
+                                            value={members[0].email}
+                                            onChange={(e) => updateMember(members[0].id, "email", e.target.value)}
+                                            required
+                                        />
+                                        <Input
+                                            label="Phone Number"
+                                            placeholder="Enter your phone number"
+                                            type="tel"
+                                            value={members[0].phone}
+                                            onChange={(e) => updateMember(members[0].id, "phone", e.target.value)}
+                                            required
+                                        />
+                                    </div>
                                 )}
 
-                                {members.length < sport.teamMin && (
+                                {sport.type === "TEAM" && members.length < sport.teamMin && (
                                     <div className="flex items-center gap-2 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl mb-6 text-amber-400">
                                         <AlertCircle className="w-5 h-5 flex-shrink-0" />
                                         <span className="text-sm">You need at least {sport.teamMin} team members to register.</span>
@@ -253,7 +322,7 @@ export default function RegisterPage() {
                                         className="w-5 h-5 mt-0.5 rounded border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--accent-primary)]"
                                     />
                                     <span className="text-sm text-[var(--text-secondary)]">
-                                        I confirm that all team members are aware of and agree to the rules and regulations of this event.
+                                        I confirm that {sport.type === "TEAM" ? "all team members are" : "I am"} aware of and agree to the rules and regulations of this event.
                                     </span>
                                 </label>
                             </Card>
@@ -266,7 +335,7 @@ export default function RegisterPage() {
                                     onClick={handleSubmit}
                                     className="flex-1"
                                     size="lg"
-                                    disabled={members.length < sport.teamMin || !acceptTerms || !teamName}
+                                    disabled={!isFormValid}
                                     isLoading={isLoading}
                                 >
                                     {!isLoading && <>Proceed to Pay <CreditCard className="w-4 h-4 ml-2" /></>}
@@ -294,7 +363,7 @@ export default function RegisterPage() {
 
                                 <div className="p-4 bg-[var(--card-bg-hover)] rounded-xl mb-6 inline-block">
                                     <p className="text-xs text-[var(--text-muted)] mb-1">Registration Number</p>
-                                    <p className="font-mono text-xl text-[var(--accent-secondary)]">REG-FOO-0043</p>
+                                    <p className="font-mono text-xl text-[var(--accent-secondary)]">REG-{sport.slug.toUpperCase()}-00{Math.floor(Math.random() * 1000)}</p>
                                 </div>
 
                                 <div className="flex flex-col sm:flex-row gap-4 justify-center">

@@ -81,7 +81,7 @@ export default function DashboardPage() {
 
                     <div className="space-y-3">
                         {registrations.map((reg, i) => {
-                            const status = statusConfig[reg.status];
+                            const status = statusConfig[reg.status] || statusConfig.pending;
 
                             return (
                                 <motion.div

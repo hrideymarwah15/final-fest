@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
-import { Mail, MapPin, ArrowUpRight } from "lucide-react";
+import { useRef, useState } from "react";
+import { Mail, MapPin, ArrowUpRight, Check, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const links = [
     { href: "/sports", label: "Sports" },
@@ -15,6 +17,30 @@ const links = [
 export function Footer() {
     const ref = useRef(null);
     const isInView = useInView(ref, { once: true });
+
+    // Newsletter State
+    const [email, setEmail] = useState("");
+    const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+
+    const handleSubscribe = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!email) return;
+
+        setStatus("loading");
+
+        // Simulate API request
+        try {
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            setStatus("success");
+            setEmail("");
+            // Reset success message after 3 seconds
+            setTimeout(() => setStatus("idle"), 3000);
+        } catch (error) {
+            console.error("Newsletter subscription failed:", error);
+            setStatus("error");
+            setTimeout(() => setStatus("idle"), 3000);
+        }
+    };
 
     return (
         <footer ref={ref} className="border-t border-[var(--border-subtle)] bg-[var(--bg-primary)]">
@@ -37,7 +63,7 @@ export function Footer() {
                         </div>
                         <p className="text-small text-[var(--text-muted)] max-w-xs mb-6">
                             The ultimate inter-college sports championship.
-                            February 14-16, 2026 at Rishihood University.
+                            February 7-8, 2026 at Rishihood University.
                         </p>
                         <div className="space-y-2 text-small text-[var(--text-muted)]">
                             <div className="flex items-center gap-2">
@@ -78,15 +104,36 @@ export function Footer() {
                         <h4 className="text-caption text-[var(--text-secondary)] uppercase tracking-widest mb-4">
                             Stay Updated
                         </h4>
-                        <form className="space-y-2">
-                            <input
-                                type="email"
-                                placeholder="Enter email"
-                                className="input text-small"
-                            />
-                            <button type="submit" className="btn btn-primary w-full text-small">
-                                Subscribe
-                            </button>
+                        <form onSubmit={handleSubscribe} className="space-y-2">
+                            <div className="relative">
+                                <label htmlFor="newsletter-email" className="sr-only">Email address</label>
+                                <Input
+                                    id="newsletter-email"
+                                    type="email"
+                                    placeholder="Enter email"
+                                    className="text-small"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    aria-label="Email address"
+                                    required
+                                />
+                            </div>
+                            <Button
+                                type="submit"
+                                className="w-full text-small"
+                                disabled={status === "loading" || status === "success"}
+                            >
+                                {status === "loading" ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : status === "success" ? (
+                                    <>Subscribed <Check className="w-4 h-4 ml-2" /></>
+                                ) : (
+                                    "Subscribe"
+                                )}
+                            </Button>
+                            {status === "error" && (
+                                <p className="text-xs text-[var(--error)]">Something went wrong. Try again.</p>
+                            )}
                         </form>
                     </div>
                 </div>

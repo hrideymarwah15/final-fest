@@ -10,26 +10,37 @@ export function CTASection() {
     const isInView = useInView(ref, { once: true, margin: "-100px" });
     const [mounted, setMounted] = useState(false);
     const [countdown, setCountdown] = useState({ days: 0, hours: 0, mins: 0, secs: 0 });
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
         setMounted(true);
-        const target = new Date("2026-02-14T09:00:00").getTime();
+        const target = new Date("2026-02-07T09:00:00").getTime();
 
         const update = () => {
             const diff = target - Date.now();
-            if (diff > 0) {
-                setCountdown({
-                    days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-                    hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-                    mins: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
-                    secs: Math.floor((diff % (1000 * 60)) / 1000),
-                });
+            if (diff <= 0) {
+                setCountdown({ days: 0, hours: 0, mins: 0, secs: 0 });
+                if (intervalRef.current) {
+                    clearInterval(intervalRef.current);
+                    intervalRef.current = null;
+                }
+                return;
             }
+
+            setCountdown({
+                days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+                hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+                mins: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+                secs: Math.floor((diff % (1000 * 60)) / 1000),
+            });
         };
 
         update();
-        const interval = setInterval(update, 1000);
-        return () => clearInterval(interval);
+        intervalRef.current = setInterval(update, 1000);
+
+        return () => {
+            if (intervalRef.current) clearInterval(intervalRef.current);
+        };
     }, []);
 
     const units = [
@@ -67,7 +78,7 @@ export function CTASection() {
                         <div className="flex flex-wrap gap-3 mb-8">
                             <div className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-card)] rounded-lg border border-[var(--border-subtle)]">
                                 <Calendar size={14} className="text-[var(--accent)]" />
-                                <span className="text-small text-[var(--text-primary)]">Feb 14-16, 2026</span>
+                                <span className="text-small text-[var(--text-primary)]">Feb 7-8, 2026</span>
                             </div>
                             <div className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-card)] rounded-lg border border-[var(--border-subtle)]">
                                 <MapPin size={14} className="text-[var(--accent)]" />
@@ -110,7 +121,7 @@ export function CTASection() {
 
                         <div className="mt-6 pt-6 border-t border-[var(--border-subtle)] flex justify-between text-small">
                             <span className="text-[var(--text-muted)]">Early bird ends</span>
-                            <span className="text-[var(--accent)]">Feb 1, 2026</span>
+                            <span className="text-[var(--accent)]">Jan 25, 2026</span>
                         </div>
                     </motion.div>
                 </div>
